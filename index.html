@@ -1,0 +1,169 @@
+<!doctype html>
+<html class="no-js" lang="">
+
+<head>
+  <meta charset="utf-8">
+  <title></title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta property="og:title" content="">
+  <meta property="og:type" content="">
+  <meta property="og:url" content="">
+  <meta property="og:image" content="">
+
+  <!-- Place favicon.ico in the root directory -->
+
+
+  <meta name="theme-color" content="#fafafa">
+</head>
+
+<body>
+  <style>
+    .drawable-block {
+      height: 600px;
+      background-color: bisque;
+    }
+
+    .drawable-block .program-area {
+      width: 800px;
+    }
+
+    .stretch-column {
+      width: 100%;
+    }
+
+    /* Clear floats after the columns */
+    .stretch-row {
+      width: 100%;
+      display: flex;
+    }
+
+    .block-market {
+      background-color: #ddd;
+      padding: 20px 20px;
+      box-sizing: border-box;
+      width: 200px;
+    }
+    /* The navigation menu links */
+    .block-market button {
+      font-family: arial;
+      padding: 6px 8px 6px 16px;
+      text-decoration: none;
+      font-size: 20px;
+      color: white;
+      display: block;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+      width: 100%;
+      border-width: 2px;
+    }
+
+    .block-editor {
+      background-color: #ddd;
+      padding: 20px 20px;
+      box-sizing: border-box;
+      width: 350px;
+    }
+
+    .button-executor {
+      background-color: #ff6464;
+    }
+    .button-executor:hover {
+      background-color: #cf5050;
+    }
+
+    .button-container {
+      background-color: #6464ff;
+    }
+    .button-container:hover {
+      background-color: #5050d1;
+    }
+
+    /* Style page content */
+    .main {
+      margin-left: 160px; /* Same as the width of the sidebar */
+      padding: 0px 10px;
+    }
+
+    .column-title {
+      font-family: arial, serif;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    /* On smaller screens, where height is less than 450px, change the style of the sidebar (less padding and a smaller font size) */
+    @media screen and (max-height: 450px) {
+      .sidenav {padding-top: 15px;}
+      .sidenav a {font-size: 18px;}
+    }
+  </style>
+  <div class="stretch-row">
+    <!-- Side navigation -->
+    <div class="stretch-column block-market">
+      <div class="column-title">Создать блок</div>
+      <button class="button-executor" onclick="addExecutorBlock()">Исполнитель</button>
+      <button class="button-container" onclick="addContainerBlock()">Контейнер</button>
+    </div>
+    <!-- Page content -->
+    <div class="stretch-column">
+      <div class="drawable-block">
+        <canvas id="program-area"></canvas>
+      </div>
+    </div>
+    <div class="stretch-column block-editor">
+      <div class="block-editor-container" hidden>
+        <div id="block-editor-title" class="column-title"></div>
+        <div id="label-container-action">
+          <label for="block-container-action">Действие:</label>
+          <select id="block-container-action">
+            <option value="container-for">Цикл For</option>
+            <option value="container-while">Цикл While</option>
+            <option value="container-if">Условие</option>
+          </select>
+        </div>
+        <div id="label-executor-action">
+          <label for="block-executor-action">Действие:</label>
+          <select id="block-executor-action">
+            <option value="assign">Присвоить значение</option>
+            <option value="increment">Инкремент</option>
+            <option value="decrement">Декремент</option>
+            <option value="print">Вывод в консоль</option>
+            <option value="scan">Ввод из консоли</option>
+          </select>
+          <label for="block-executor-name">Название переменной:</label>
+          <input type="text" id="block-executor-name"/>
+          <label for="block-executor-expression">Значение:</label>
+          <input type="text" id="block-executor-expression"/>
+        </div>
+        <div id="label-body-action">
+          <label for="block-body-action">Операция:</label>
+          <select id="block-body-action">
+            <option value="if">Условие</option>
+            <option value="while">Цикл</option>
+          </select>
+        </div>
+        <div id="label-condition-action">
+          <label for="block-condition-expression">Условие:</label>
+          <input type="text" id="block-condition-expression"/>
+        </div>
+        <button onclick="applyBlockById(screen_blocks, active_block_id); draw_blocks();">Применить</button>
+        <button onclick="removeBlockById(screen_blocks, active_block_id, 0); draw_blocks();">Удалить блок</button>
+      </div>
+    </div>
+  </div>
+  <button class="button-container" onclick="interpretation()">Запуск интерпретатора</button>
+
+  <script>
+    var canvas = document.getElementById("program-area");
+    var ctx = canvas.getContext("2d");
+
+    let drawable_block = document.querySelector('.drawable-block');
+    ctx.canvas.width = drawable_block.offsetWidth;
+    ctx.canvas.height = drawable_block.offsetHeight;
+  </script>
+  <script src="js/dragable_blocks.js"></script>
+  <script src="js/logic.js"></script>
+</body>
+
+</html>
