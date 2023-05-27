@@ -119,7 +119,7 @@ function applyBlockById(blocks, id) {
         break;
       case "Condition":
         let condition_expression = document.getElementById("block-condition-expression").value;
-        blocks[index].condition  =condition_expression;
+        blocks[index].expression  = condition_expression;
         break;
     }
     return blocks[index];

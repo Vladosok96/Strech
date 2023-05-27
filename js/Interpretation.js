@@ -213,10 +213,29 @@ function interpretation() {
             let current_condition_block = current_last_block.blocks[0];
             let current_body_block = current_last_block.blocks[1];
 
+            // Перевод условия в дерево
+            let token_thread = lexicalAnalizer(current_condition_block.expression);
+            let expression_tree = parseExpression(token_thread);
 
+            // Проверка на использование неинициализированных переменных в массиве
+            let used_variables = getVariables(expression_tree);
+            for (let variable_number = 0; variable_number < used_variables.length; variable_number++) {
+                let check_variable_initialized = false;
+                for (let i = 0; i < variable_layers.length; i++) {
+                    for (let j = 0; j < variable_layers[i].length; j++) {
+                        if (variable_layers[i][j] === used_variables[variable_number]) {
+                            check_variable_initialized = true;
+                        }
+                    }
+                }
+                if (!check_variable_initialized) {
+                    alert("Переменная " + used_variables[variable_number] + " не инициализирована в данном участке программы");
+                    return 0;
+                }
+            }
 
             if (current_body_block.action === "if") {
-
+                current_condition_block += "if "
             }
             else if (current_body_block.action === "while") {
 
