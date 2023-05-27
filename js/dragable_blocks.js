@@ -192,7 +192,7 @@ class ExecutorBlock extends Block {
   // Метод для отрисовки блока-контейнера и всех вложенных блоков
   draw() {
     super.draw();
-    if (this.type != "Executor") return 1;
+    if (this.type !== "Executor") return 1;
 
     setFillColorr([0, 0, 0, 0]);
     ctx.font = "20px Consolas";

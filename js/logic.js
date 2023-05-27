@@ -5,7 +5,6 @@ function setFillColorr(color) {
           ${color[2]})`;
 }
 
-
 // Переменые с блоками
 var block_id_counter = 0;
 var screen_blocks = [];
@@ -19,159 +18,6 @@ var selected_block_id = -1;
 var hover_block_id = -1;
 var active_block_id = -1;
 var active_block;
-
-// Функция для чтения строки в поток токенов
-function lexicalAnalizer(input_string) {
-  // Массив для хранения лексем
-  const tokens = [];
-
-  // Индекс текущего символа
-  let current = 0;
-
-  // Регулярные выражения для сопоставления лексем
-  const LETTER_REGEX = /[a-zA-Z]/;
-  const NUMBER_REGEX = /[0-9]/;
-  const WHITESPACE_REGEX = /\s/;
-  const OPERATOR_REGEX = /[+\-*/()<>]=?/;
-
-  // Функция для добавления лексемы в массив
-  function addToken(type, value = null) {
-    tokens.push({ type, value });
-  }
-
-  // Цикл для обработки символов во входной строке
-  while (current < input_string.length) {
-    let char = input_string[current];
-
-    if (LETTER_REGEX.test(char)) {
-      // Обработка переменных
-      let variable = "";
-
-      while (current < input_string.length && LETTER_REGEX.test(input_string[current])) {
-        variable += input_string[current];
-        current++;
-      }
-
-      addToken("VARIABLE", variable);
-    } else if (NUMBER_REGEX.test(char)) {
-      // Обработка чисел
-      let number = "";
-
-      while (current < input_string.length && NUMBER_REGEX.test(input_string[current])) {
-        number += input_string[current];
-        current++;
-      }
-
-      addToken("NUMBER", parseInt(number));
-    } else if (WHITESPACE_REGEX.test(char)) {
-      // Пропуск пробелов
-      current++;
-    } else if (OPERATOR_REGEX.test(char)) {
-      // Обработка операторов
-      addToken("OPERATOR", char);
-      current++;
-    } else {
-      // Нераспознанный символ
-      throw new Error("Нераспознанный символ: " + char);
-    }
-  }
-
-  return tokens;
-}
-
-// Функция для чтения выражения и перевода её в дерево
-function parseExpression(tokens) {
-  let current = 0;
-
-  function parseExpressionTokens() {
-    let left = parseTerm();
-
-    while (current < tokens.length && tokens[current].type === "OPERATOR" && "+-".includes(tokens[current].value)) {
-      const operator = tokens[current].value;
-      current++;
-      const right = parseTerm();
-      left = { type: "BinaryExpression", operator, left, right };
-    }
-
-    return left;
-  }
-
-  function parseTerm() {
-    let left = parseFactor();
-
-    while (current < tokens.length && tokens[current].type === "OPERATOR" && "*/".includes(tokens[current].value)) {
-      const operator = tokens[current].value;
-      current++;
-      const right = parseFactor();
-      left = { type: "BinaryExpression", operator, left, right };
-    }
-
-    return left;
-  }
-
-  function parseFactor() {
-    if (current < tokens.length && tokens[current].type === "NUMBER") {
-      const value = tokens[current].value;
-      current++;
-      return { type: "NumberLiteral", value };
-    } else if (current < tokens.length && tokens[current].type === "VARIABLE") {
-      const name = tokens[current].value;
-      current++;
-      return { type: "Variable", name };
-    } else if (current < tokens.length && tokens[current].type === "OPERATOR" && tokens[current].value === "(") {
-      current++;
-      const expression = parseExpressionTokens();
-      if (current >= tokens.length || tokens[current].type !== "OPERATOR" || tokens[current].value !== ")") {
-        throw new Error("Ожидается закрывающая скобка ')'");
-      }
-      current++;
-      return expression;
-    } else {
-      throw new Error("Неверный синтаксис");
-    }
-  }
-
-  return parseExpressionTokens();
-}
-
-// Фунция выполняющая обязанности интерпретатора
-function interpretation() {
-  let result_program = "";
-  let blocks_tree = screen_blocks;
-  let blocks_stream = [];
-  let variable_layers = [];
-
-  blocks_stream.push(blocks_tree[0]);
-  variable_layers.push([])
-
-  while (blocks_stream.length > 0) {
-    let current_last_block = blocks_stream[blocks_stream.length - 1];
-    if (current_last_block.type === "Executor") {
-      if (current_last_block.action === "assign") {
-        // Перевод выражения в дерево
-        let token_thread = lexicalAnalizer(current_last_block.expression);
-        let expression_tree = parseExpression(token_thread);
-
-        // Проверка на инициализацию переменной
-        let check_variable_initialized = false;
-        for (let i = 0; i < variable_layers.length; i++) {
-          for (let j = 0; j < variable_layers[i].length; j++) {
-            if (variable_layers[i][j] === current_last_block.variable) {
-              check_variable_initialized = true;
-            }
-          }
-        }
-
-        // Добавление отсутствующей переменной
-        if (!check_variable_initialized) {
-          variable_layers[variable_layers.length - 1].push(current_last_block.variable);
-        }
-
-
-      }
-    }
-  }
-}
 
 // Найти индекс блока по его id
 function indexById(Array, id) {
@@ -216,12 +62,15 @@ function pushBlockById(id, block) {
   screen_blocks.some(iter);
 }
 
+// Функция для добавления блоков-исполнителей
 function addExecutorBlock() {
   screen_blocks.push(new ExecutorBlock(block_id_counter, 100, 100, "Блок-исполнитель"));
   block_id_counter++;
   draw_blocks();
 }
 
+// Функция для добавления блоков-контейнеров, содержащих тело и условие,
+// а может даже участок для выполнения в случае невыполнения условия
 function addContainerBlock() {
   let parent_block = new ParentBlock(block_id_counter, 100, 100, "Блок-контейнер");
   parent_block.blocks.push(new ConditionBlock(block_id_counter + 1, 100, 100, "Условие", block_id_counter))
@@ -231,6 +80,7 @@ function addContainerBlock() {
   draw_blocks();
 }
 
+// Выделить блок желтой окантовкой по его id
 function makeBlockActive(blocks, id) {
   const index = indexById(blocks, id);
   if (index !== -1) {
@@ -249,6 +99,7 @@ function makeBlockActive(blocks, id) {
   }
 }
 
+// Применить изменения для блока по его id, используя введенные данные из боковой панели
 function applyBlockById(blocks, id) {
   const index = indexById(blocks, id);
   if (index !== -1) {
@@ -306,6 +157,8 @@ function removeBlockById(blocks, id, parent_id) {
   }
 }
 
+// Снять выделение со всех блоков (если убирать выделение только с конкретного блока,
+// из-за многопоточности могут остаться неубранные блоки)
 function makeBlocksInactive(blocks) {
   let block = null;
   for (let i = 0; i < blocks.length; i++) {
