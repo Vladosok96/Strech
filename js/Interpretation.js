@@ -158,13 +158,14 @@ function interpretation() {
 
     while (blocks_stream.length > 0) {
         let current_last_block = blocks_stream[blocks_stream.length - 1];
-        if (current_last_block.type === "Executor") {
-            // Расстановка табов перед строкой кода
-            for (let i = 0; i < blocks_stream.length - 1; i++)
-            {
-                result_program += "    ";
-            }
 
+        // Расстановка табов перед строкой кода
+        for (let i = 0; i < blocks_stream.length - 1; i++)
+        {
+            result_program += "    ";
+        }
+
+        if (current_last_block.type === "Executor") {
             if (current_last_block.action === "assign") {
                 // Перевод выражения в дерево
                 let token_thread = lexicalAnalizer(current_last_block.expression);
@@ -209,7 +210,17 @@ function interpretation() {
             }
         }
         else if (current_last_block.type === "Container") {
+            let current_condition_block = current_last_block.blocks[0];
+            let current_body_block = current_last_block.blocks[1];
 
+
+
+            if (current_body_block.action === "if") {
+
+            }
+            else if (current_body_block.action === "while") {
+
+            }
         }
     }
 }
