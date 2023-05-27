@@ -117,7 +117,7 @@ function getVariables(tree) {
     const variables = [];
 
     function traverse(node) {
-        if (node.type === 'Variable') {
+        if (node.type === 'Variable' && node.name !== "True" && node.name !== "False") {
             variables.push(node.name);
         } else if (node.type === 'BinaryExpression') {
             traverse(node.left);
@@ -153,14 +153,14 @@ function interpretation() {
     let blocks_stream = [];
     let variable_layers = [];
 
-    blocks_stream.push(blocks_tree[0]);
+    blocks_stream.push([...blocks_tree]);
     variable_layers.push([])
 
     while (blocks_stream.length > 0) {
-        let current_last_block = blocks_stream[blocks_stream.length - 1];
+        let current_last_block = blocks_stream[blocks_stream.length - 1][0];
 
         // Расстановка табов перед строкой кода
-        for (let i = 0; i < blocks_stream.length - 1; i++)
+        for (let i = 0; i < variable_layers.length - 1; i++)
         {
             result_program += "    ";
         }
@@ -205,8 +205,7 @@ function interpretation() {
 
                 // Добавление строки в вывод
                 result_program += current_last_block.variable + " = " + treeToExpression(expression_tree) + "\n";
-                alert(result_program);
-                blocks_stream.splice(0, 1);
+                blocks_stream[blocks_stream.length - 1].splice(blocks_stream.length - 1, 1);
             }
         }
         else if (current_last_block.type === "Container") {
@@ -234,11 +233,25 @@ function interpretation() {
                 }
             }
 
+            // Добавление в вывод строки с условием
             if (current_body_block.action === "if") {
-                current_condition_block += "if "
+                result_program += "if " + treeToExpression(expression_tree) + ":\n";
             }
             else if (current_body_block.action === "while") {
+                result_program += "while " + treeToExpression(expression_tree) + ":\n";
+            }
 
+            let tmp_blocks_stream = [...current_body_block.blocks];
+            blocks_stream.splice(blocks_stream.length - 1, 1);
+            blocks_stream.push(tmp_blocks_stream);
+            variable_layers.push([]);
+            console.log("test");
+        }
+        while (blocks_stream[blocks_stream.length - 1].length === 0) {
+            variable_layers.splice(variable_layers.length - 1, 1);
+            blocks_stream.splice(blocks_stream.length - 1, 1);
+            if (blocks_stream.length === 0) {
+                return result_program;
             }
         }
     }

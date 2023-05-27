@@ -227,7 +227,7 @@ class ConditionBlock extends ExecutorBlock {
     this.name = name;
     this.parent_id = parent_id;
     this.type = "Condition";
-    this.condition = "True";
+    this.expression = "True";
   }
 
   // Проверка наведения мыши на блок
@@ -260,7 +260,7 @@ class ConditionBlock extends ExecutorBlock {
     super.draw();
     setFillColorr([0, 0, 0, 0]);
     ctx.font = "20px Consolas";
-    let output_condition = this.condition;
+    let output_condition = this.expression;
     if (output_condition.length > 15) output_condition = output_condition.substring(0, 12) + "...";
     ctx.fillText(output_condition, this.x + 5, this.y + 25);
   }
