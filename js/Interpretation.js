@@ -204,8 +204,8 @@ function interpretation() {
                 }
 
                 // Добавление строки в вывод
-                result_program += current_last_block.variable + " = " + treeToExpression(expression_tree) + "\n";
-                blocks_stream[blocks_stream.length - 1].splice(blocks_stream.length - 1, 1);
+                result_program += current_last_block.variable + " = " + current_last_block.expression + "\n";
+                blocks_stream[blocks_stream.length - 1].shift();
             }
         }
         else if (current_last_block.type === "Container") {
@@ -235,21 +235,21 @@ function interpretation() {
 
             // Добавление в вывод строки с условием
             if (current_body_block.action === "if") {
-                result_program += "if " + treeToExpression(expression_tree) + ":\n";
+                result_program += "if " + current_condition_block.expression + ":\n";
             }
             else if (current_body_block.action === "while") {
-                result_program += "while " + treeToExpression(expression_tree) + ":\n";
+                result_program += "while " + current_condition_block.expression + ":\n";
             }
 
             let tmp_blocks_stream = [...current_body_block.blocks];
-            blocks_stream.splice(blocks_stream.length - 1, 1);
+            blocks_stream[blocks_stream.length - 1].shift();
             blocks_stream.push(tmp_blocks_stream);
             variable_layers.push([]);
             console.log("test");
         }
         while (blocks_stream[blocks_stream.length - 1].length === 0) {
-            variable_layers.splice(variable_layers.length - 1, 1);
-            blocks_stream.splice(blocks_stream.length - 1, 1);
+            variable_layers.pop();
+            blocks_stream.pop();
             if (blocks_stream.length === 0) {
                 return result_program;
             }
