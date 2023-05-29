@@ -1,115 +1,130 @@
 // Функция для чтения строки в поток токенов
-function lexicalAnalizer(input_string) {
-    // Массив для хранения лексем
+function lexicalAnalizer(input) {
     const tokens = [];
+    let currentToken = "";
+    let insideString = false;
 
-    // Индекс текущего символа
-    let current = 0;
+    for (let i = 0; i < input.length; i++) {
+        const char = input[i];
 
-    // Регулярные выражения для сопоставления лексем
-    const LETTER_REGEX = /[a-zA-Z]/;
-    const NUMBER_REGEX = /[0-9]/;
-    const WHITESPACE_REGEX = /\s/;
-    const OPERATOR_REGEX = /[+\-*/()<>]=?/;
+        if (insideString) {
+            currentToken += char;
 
-    // Функция для добавления лексемы в массив
-    function addToken(type, value = null) {
-        tokens.push({ type, value });
+            if (char === '"') {
+                tokens.push({ type: "string", value: currentToken });
+                currentToken = "";
+                insideString = false;
+            }
+        } else if (/\s/.test(char)) {
+            if (currentToken !== "") {
+                tokens.push(getTokenType(currentToken));
+                currentToken = "";
+            }
+        } else if (/[\+\-\*\/\(\)]/.test(char)) {
+            if (currentToken !== "") {
+                tokens.push(getTokenType(currentToken));
+                currentToken = "";
+            }
+            tokens.push({ type: "operator", value: char });
+        } else if (/[<>!=]=/.test(char)) {
+            if (currentToken !== "") {
+                tokens.push(getTokenType(currentToken));
+                currentToken = "";
+            }
+            const nextChar = input[i + 1];
+            if (nextChar === "=") {
+                tokens.push({ type: "operator", value: char + "=" });
+                i++;
+            } else {
+                tokens.push({ type: "operator", value: char });
+            }
+        } else if (char === '"') {
+            insideString = true;
+            currentToken += char;
+        } else {
+            currentToken += char;
+        }
     }
 
-    // Цикл для обработки символов во входной строке
-    while (current < input_string.length) {
-        let char = input_string[current];
-
-        if (LETTER_REGEX.test(char)) {
-            // Обработка переменных
-            let variable = "";
-
-            while (current < input_string.length && LETTER_REGEX.test(input_string[current])) {
-                variable += input_string[current];
-                current++;
-            }
-
-            addToken("VARIABLE", variable);
-        } else if (NUMBER_REGEX.test(char)) {
-            // Обработка чисел
-            let number = "";
-
-            while (current < input_string.length && NUMBER_REGEX.test(input_string[current])) {
-                number += input_string[current];
-                current++;
-            }
-
-            addToken("NUMBER", parseInt(number));
-        } else if (WHITESPACE_REGEX.test(char)) {
-            // Пропуск пробелов
-            current++;
-        } else if (OPERATOR_REGEX.test(char)) {
-            // Обработка операторов
-            addToken("OPERATOR", char);
-            current++;
-        } else {
-            // Нераспознанный символ
-            throw new Error("Нераспознанный символ: " + char);
-        }
+    if (currentToken !== "") {
+        tokens.push(getTokenType(currentToken));
     }
 
     return tokens;
 }
 
-// Функция для чтения выражения и перевода её в дерево
-function parseExpression(tokens) {
-    let current = 0;
+function getTokenType(token) {
+    if (/[0-9]+/.test(token)) {
+        return { type: "number", value: parseFloat(token) };
+    } else if (/\b(true|false)\b/.test(token)) {
+        return { type: "boolean", value: token === "true" };
+    } else if (/[a-zA-Z_][a-zA-Z0-9_]*/.test(token)) {
+        return { type: "variable", value: token };
+    } else if (["+", "-", "*", "/"].includes(token)) {
+        return { type: "operator", value: token };
+    } else if (["==", "!=", "<", ">", "<=", ">=", "&&", "||"].includes(token)) {
+        return { type: "comparison", value: token };
+    } else if (token.startsWith('"') && token.endsWith('"')) {
+        return { type: "string", value: token.slice(1, -1) };
+    } else {
+        throw new Error(`Invalid token: ${token}`);
+    }
+}
 
-    function parseExpressionTokens() {
+// Функция для чтения выражения и перевода её в дерево
+function parseTokens(tokens) {
+    let currentTokenIndex = 0;
+
+    function parseExpression() {
         let left = parseTerm();
 
-        while (current < tokens.length && tokens[current].type === "OPERATOR" && "+-".includes(tokens[current].value)) {
-            const operator = tokens[current].value;
-            current++;
+        while (
+            currentTokenIndex < tokens.length &&
+            (tokens[currentTokenIndex].type === "operator" ||
+                tokens[currentTokenIndex].type === "comparison")
+            ) {
+            const operatorToken = tokens[currentTokenIndex];
+            currentTokenIndex++;
+
             const right = parseTerm();
-            left = { type: "BinaryExpression", operator, left, right };
+
+            left = {
+                type: "binaryExpression",
+                operator: operatorToken.value,
+                left,
+                right,
+            };
         }
 
         return left;
     }
 
     function parseTerm() {
-        let left = parseFactor();
+        const token = tokens[currentTokenIndex];
+        currentTokenIndex++;
 
-        while (current < tokens.length && tokens[current].type === "OPERATOR" && "*/".includes(tokens[current].value)) {
-            const operator = tokens[current].value;
-            current++;
-            const right = parseFactor();
-            left = { type: "BinaryExpression", operator, left, right };
-        }
-
-        return left;
-    }
-
-    function parseFactor() {
-        if (current < tokens.length && tokens[current].type === "NUMBER") {
-            const value = tokens[current].value;
-            current++;
-            return { type: "NumberLiteral", value };
-        } else if (current < tokens.length && tokens[current].type === "VARIABLE") {
-            const name = tokens[current].value;
-            current++;
-            return { type: "Variable", name };
-        } else if (current < tokens.length && tokens[current].type === "OPERATOR" && tokens[current].value === "(") {
-            current++;
-            const expression = parseExpressionTokens();
-            if (current >= tokens.length || tokens[current].type !== "OPERATOR" || tokens[current].value !== ")") {
-                throw new Error("Ожидается закрывающая скобка ')'");
+        if (token.type === "number" || token.type === "boolean" || token.type === "variable" || token.type === "string") {
+            return token;
+        } else if (token.type === "operator" && token.value === "-") {
+            const expression = parseTerm();
+            return {
+                type: "unaryExpression",
+                operator: "-",
+                argument: expression,
+            };
+        } else if (token.type === "operator" && token.value === "(") {
+            const expression = parseExpression();
+            if (tokens[currentTokenIndex].type !== "operator" || tokens[currentTokenIndex].value !== ")") {
+                throw new Error("Missing closing parenthesis ')'");
             }
-            current++;
+            currentTokenIndex++;
             return expression;
         } else {
-            throw new Error("Неверный синтаксис");
+            throw new Error(`Unexpected token: ${JSON.stringify(token)}`);
         }
     }
 
-    return parseExpressionTokens();
+    return parseExpression();
 }
 
 // Функция для получения использованных переменных в дереве
@@ -117,9 +132,9 @@ function getVariables(tree) {
     const variables = [];
 
     function traverse(node) {
-        if (node.type === 'Variable' && node.name !== "True" && node.name !== "False") {
-            variables.push(node.name);
-        } else if (node.type === 'BinaryExpression') {
+        if (node.type === 'variable') {
+            variables.push(node.value);
+        } else if (node.type === 'binaryExpression') {
             traverse(node.left);
             traverse(node.right);
         }
@@ -129,7 +144,6 @@ function getVariables(tree) {
     traverse(tree);
     return variables;
 }
-
 
 // Функция для перевода дерева в арифметическое выражение
 function treeToExpression(tree) {
@@ -169,7 +183,7 @@ function interpretation() {
             if (current_last_block.action === "assign") {
                 // Перевод выражения в дерево
                 let token_thread = lexicalAnalizer(current_last_block.expression);
-                let expression_tree = parseExpression(token_thread);
+                let expression_tree = parseTokens(token_thread);
 
                 // Проверка на инициализацию переменной
                 let check_variable_initialized = false;
@@ -198,15 +212,94 @@ function interpretation() {
                         }
                     }
                     if (!check_variable_initialized) {
-                        alert("Переменная " + used_variables[variable_number] + " не инициализирована в данном участке программы");
+                        alert("Переменная '" + used_variables[variable_number] + "' не инициализирована в данном участке программы");
                         return 0;
                     }
                 }
 
                 // Добавление строки в вывод
                 result_program += current_last_block.variable + " = " + current_last_block.expression + "\n";
-                blocks_stream[blocks_stream.length - 1].shift();
             }
+            else if (current_last_block.action === "increment") {
+                // Проверка на инициализацию переменной
+                let check_variable_initialized = false;
+                for (let i = 0; i < variable_layers.length; i++) {
+                    for (let j = 0; j < variable_layers[i].length; j++) {
+                        if (variable_layers[i][j] === current_last_block.variable) {
+                            check_variable_initialized = true;
+                        }
+                    }
+                }
+                if (!check_variable_initialized) {
+                    alert("Переменная '" + current_last_block.variable + "' не инициализирована в данном участке программы");
+                    return 0;
+                }
+
+                // Добавление строки в вывод
+                result_program += current_last_block.variable + " += 1\n";
+            }
+            else if (current_last_block.action === "decrement") {
+                // Проверка на инициализацию переменной
+                let check_variable_initialized = false;
+                for (let i = 0; i < variable_layers.length; i++) {
+                    for (let j = 0; j < variable_layers[i].length; j++) {
+                        if (variable_layers[i][j] === current_last_block.variable) {
+                            check_variable_initialized = true;
+                        }
+                    }
+                }
+                if (!check_variable_initialized) {
+                    alert("Переменная '" + current_last_block.variable + "' не инициализирована в данном участке программы");
+                    return 0;
+                }
+
+                // Добавление строки в вывод
+                result_program += current_last_block.variable + " -= 1\n";
+            }
+            else if (current_last_block.action === "print") {
+                // Перевод выражения в дерево
+                let token_thread = lexicalAnalizer(current_last_block.expression);
+                let expression_tree = parseTokens(token_thread);
+
+                // Проверка на использование неинициализированных переменных в массиве
+                let used_variables = getVariables(expression_tree);
+                for (let variable_number = 0; variable_number < used_variables.length; variable_number++) {
+                    let check_variable_initialized = false;
+                    for (let i = 0; i < variable_layers.length; i++) {
+                        for (let j = 0; j < variable_layers[i].length; j++) {
+                            if (variable_layers[i][j] === used_variables[variable_number]) {
+                                check_variable_initialized = true;
+                            }
+                        }
+                    }
+                    if (!check_variable_initialized) {
+                        alert("Переменная '" + used_variables[variable_number] + "' не инициализирована в данном участке программы");
+                        return 0;
+                    }
+                }
+
+                // Добавление строки в вывод
+                result_program += "print(" + current_last_block.expression + ")\n";
+            }
+            else if (current_last_block.action === "scan") {
+                // Проверка на инициализацию переменной
+                let check_variable_initialized = false;
+                for (let i = 0; i < variable_layers.length; i++) {
+                    for (let j = 0; j < variable_layers[i].length; j++) {
+                        if (variable_layers[i][j] === current_last_block.variable) {
+                            check_variable_initialized = true;
+                        }
+                    }
+                }
+                if (!check_variable_initialized) {
+                    alert("Переменная '" + current_last_block.variable + "' не инициализирована в данном участке программы");
+                    return 0;
+                }
+
+                // Добавление строки в вывод
+                result_program += current_last_block.variable + " = input()\n";
+            }
+            blocks_stream[blocks_stream.length - 1].shift();
         }
         else if (current_last_block.type === "Container") {
             let current_condition_block = current_last_block.blocks[0];
@@ -214,7 +307,7 @@ function interpretation() {
 
             // Перевод условия в дерево
             let token_thread = lexicalAnalizer(current_condition_block.expression);
-            let expression_tree = parseExpression(token_thread);
+            let expression_tree = parseTokens(token_thread);
 
             // Проверка на использование неинициализированных переменных в массиве
             let used_variables = getVariables(expression_tree);
@@ -228,7 +321,7 @@ function interpretation() {
                     }
                 }
                 if (!check_variable_initialized) {
-                    alert("Переменная " + used_variables[variable_number] + " не инициализирована в данном участке программы");
+                    alert("Переменная '" + used_variables[variable_number] + "' не инициализирована в данном участке программы");
                     return 0;
                 }
             }
@@ -251,6 +344,8 @@ function interpretation() {
             variable_layers.pop();
             blocks_stream.pop();
             if (blocks_stream.length === 0) {
+                let output_container = document.getElementById("output-container");
+                output_container.innerHTML = result_program;
                 return result_program;
             }
         }

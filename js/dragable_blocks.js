@@ -227,7 +227,7 @@ class ConditionBlock extends ExecutorBlock {
     this.name = name;
     this.parent_id = parent_id;
     this.type = "Condition";
-    this.expression = "True";
+    this.expression = "true";
   }
 
   // Проверка наведения мыши на блок

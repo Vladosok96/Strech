@@ -39,6 +39,10 @@
       display: flex;
     }
 
+    .output-row {
+      font-family: arial, serif;
+    }
+
     .block-market {
       background-color: #ddd;
       padding: 20px 20px;
@@ -47,7 +51,7 @@
     }
     /* The navigation menu links */
     .block-market button {
-      font-family: arial;
+      font-family: arial, serif;
       padding: 6px 8px 6px 16px;
       text-decoration: none;
       font-size: 20px;
@@ -96,6 +100,17 @@
     @media screen and (max-height: 450px) {
       .sidenav {padding-top: 15px;}
       .sidenav a {font-size: 18px;}
+    }
+
+    pre {
+      font-family: "Courier New", Courier, monospace;
+      background-color: #ffffff;
+      border: 1px solid #dddddd;
+      padding: 20px;
+      white-space: pre-wrap;
+      font-size: 14px;
+      line-height: 1.5;
+      overflow-x: auto;
     }
   </style>
   <div class="stretch-row">
@@ -152,7 +167,13 @@
       </div>
     </div>
   </div>
-  <button class="button-container" onclick="console.log(interpretation())">Запуск интерпретатора</button>
+  <div class="control-row">
+    <button class="button-container" onclick="console.log(interpretation())">Запуск интерпретатора</button>
+  </div>
+  <div class="output-row">
+    <h3>Вывод на языке Python</h3>
+    <pre><code id="output-container"></code></pre>
+  </div>
 
   <script>
     var canvas = document.getElementById("program-area");
