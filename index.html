@@ -84,6 +84,18 @@
       background-color: #5050d1;
     }
 
+    .button-compile {
+      background-color: #6464ff;
+      height: 40px;
+    }
+
+    .control-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 50px;
+    }
+
     /* Style page content */
     .main {
       margin-left: 160px; /* Same as the width of the sidebar */
@@ -168,7 +180,7 @@
     </div>
   </div>
   <div class="control-row">
-    <button class="button-container" onclick="console.log(interpretation())">Запуск интерпретатора</button>
+    <button class="button-compile" onclick="console.log(interpretation())">Запуск компилятора</button>
   </div>
   <div class="output-row">
     <h3>Вывод на языке Python</h3>
