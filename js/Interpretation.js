@@ -165,7 +165,7 @@ function interpretation() {
     let result_program = "";
     let blocks_tree = screen_blocks;
     let blocks_stream = [];
-    let variable_layers = [["__name__"]];
+    let variable_layers = [];
 
     blocks_stream.push([...blocks_tree]);
     variable_layers.push([])
@@ -174,7 +174,7 @@ function interpretation() {
         let current_last_block = blocks_stream[blocks_stream.length - 1][0];
 
         // Расстановка табов перед строкой кода
-        for (let i = 0; i < variable_layers.length - 2; i++)
+        for (let i = 0; i < variable_layers.length - 1; i++)
         {
             result_program += "    ";
         }
@@ -338,6 +338,7 @@ function interpretation() {
             blocks_stream[blocks_stream.length - 1].shift();
             blocks_stream.push(tmp_blocks_stream);
             variable_layers.push([]);
+            console.log("test");
         }
         while (blocks_stream[blocks_stream.length - 1].length === 0) {
             variable_layers.pop();

@@ -221,18 +221,13 @@ class ExecutorBlock extends Block {
 }
 
 class ConditionBlock extends ExecutorBlock {
-  constructor(id, x, y, name, parent_id, expression) {
+  constructor(id, x, y, name, parent_id) {
     super(id, x, y);
     this.color = [255, 200, 100, 255];
     this.name = name;
     this.parent_id = parent_id;
     this.type = "Condition";
-    if (expression === undefined) {
-      this.expression = "true";
-    }
-    else {
-      this.expression = expression;
-    }
+    this.expression = "true";
   }
 
   // Проверка наведения мыши на блок
